@@ -1,0 +1,42 @@
+name: Data Preprocessing Automation
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    # Action ini hanya akan berjalan jika ada perubahan pada dataset_raw atau script automate
+    paths:
+      - 'dataset_raw/**'
+      - 'preprocessing/automate_Alfin Himawan Santosa.py'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas
+
+    - name: Run preprocessing script
+      run: |
+        cd preprocessing
+        python "automate_Alfin Himawan Santosa.py"
+
+    - name: Commit and push clean dataset
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add preprocessing/dataset_preprocessing/
+        git diff-index --quiet HEAD || git commit -m "Auto-update clean dataset [skip ci]"
+        git push
