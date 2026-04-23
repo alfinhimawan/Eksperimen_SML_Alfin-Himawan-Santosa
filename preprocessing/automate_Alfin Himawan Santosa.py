@@ -44,3 +44,4 @@ def run_preprocessing():
 
 if __name__ == '__main__':
     run_preprocessing()
+    # Pemicu (trigger) untuk GitHub Actions
