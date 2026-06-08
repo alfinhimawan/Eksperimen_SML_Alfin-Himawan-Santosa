@@ -1,0 +1,62 @@
+name: Preprocess Iris Dataset
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'preprocessing/**'
+      - 'iris_raw/**'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  preprocess:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python 3.12.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.7'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy scikit-learn joblib
+      
+      - name: Run preprocessing
+        run: |
+          python preprocessing/automate_Alfin-Himawan-Santosa.py \
+            --output-dir preprocessing/iris_preprocessing \
+            --test-size 0.2 \
+            --random-state 42
+      
+      - name: Verify output
+        run: |
+          echo "=== OUTPUT FILES ==="
+          ls -la preprocessing/iris_preprocessing/
+          echo "=== TRAIN SET PREVIEW ==="
+          python -c "import pandas as pd; df=pd.read_csv('preprocessing/iris_preprocessing/iris_train.csv'); print(df.head())"
+          echo "=== TEST SET PREVIEW ==="
+          python -c "import pandas as pd; df=pd.read_csv('preprocessing/iris_preprocessing/iris_test.csv'); print(df.head())"
+      
+      - name: Upload preprocessed dataset as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: iris-preprocessed-dataset
+          path: preprocessing/iris_preprocessing/
+          retention-days: 30
+      
+      - name: Commit and push preprocessed data
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add preprocessing/iris_preprocessing/
+          git diff --staged --quiet || git commit -m "Auto-update: preprocessed dataset [$(date +'%Y-%m-%d %H:%M:%S')]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
